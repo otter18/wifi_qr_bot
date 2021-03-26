@@ -115,6 +115,15 @@ def gen_qr(name, ssid, pas, t='WPA', hid="False"):
     return path
 
 
+def check(ssid, pas, t='WPA', hid="False"):
+    if t not in AuthType:
+        return False
+    if hid.lower() not in ['true', 'false']:
+        return False
+
+    return True
+
+
 # --------------- bot -------------------
 @bot.message_handler(commands=['help', 'start'])
 def send_welcome(message):
@@ -134,6 +143,11 @@ def create1(message):
     logger.info(f'</code>@{message.from_user.username}<code> created qr-code with less params')
 
     _, ssid, pas = message.text.split()
+    if not check(ssid, pas):
+        bot.send_message(message.chat.id,
+                         'Invalid format. \n'
+                         'Use something similar to <code>/create MyWiFiName VerySavePassword</code>',
+                         parse_mode='HTML')
     path = gen_qr(abs(int(message.chat.id)), ssid, pas)
 
     photo = open(path, 'rb')
@@ -145,6 +159,11 @@ def create2(message):
     logger.info(f'</code>@{message.from_user.username}<code> created qr-code with full params')
 
     _, ssid, pas, auth, hid = message.text.split()
+    if not check(ssid, pas):
+        bot.send_message(message.chat.id,
+                         'Invalid format. \n'
+                         'Use something similar to <code>/create MyWiFiName VerySavePassword WPA2 False</code>',
+                         parse_mode='HTML')
     path = gen_qr(abs(int(message.chat.id)), ssid, pas, auth, hid)
 
     photo = open(path, 'rb')
