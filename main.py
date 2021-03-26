@@ -157,7 +157,8 @@ def create(message):
     bot.send_message(message.chat.id,
                      '<b>Use one of the following command formats:</b>\n'
                      '• /create {SSID} {PASSWORD}\n'
-                     '• /create {SSID} {PASSWORD: None if nopass} {AUTH_TYPE: WPA, WPA2, WEP, nopass} {IS_HIDDEN: True, False}')
+                     '• /create {SSID} {PASSWORD: None if nopass} {AUTH_TYPE: WPA, WPA2, WEP, nopass} {IS_HIDDEN: True, False}',
+                     parse_mode='html')
 
 
 @bot.message_handler(func=lambda message: True)
