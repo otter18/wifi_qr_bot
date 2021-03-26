@@ -31,6 +31,7 @@ users = [int(os.environ.get("ADMIN_ID"))]
 alpha_logger = logging.getLogger()
 alpha_logger.setLevel(logging.INFO)
 tg_logger.setup(alpha_logger, token=os.environ.get("LOG_BOT_TOKEN"), users=users)
+tg_logger.setup(app.logger, token=os.environ.get("LOG_BOT_TOKEN"), users=users)
 
 logger = logging.getLogger("wifi-qr-bot")
 
@@ -109,7 +110,7 @@ def gen_qr(name, ssid, pas, t='WPA', hid="False"):
     if t == 'nopass':
         txt = f'WIFI:H:{hid};S:{ssid};T:{t};;'
 
-    qr = pyqrcode.create(txt)
+    qr = pyqrcode.create(txt.encode('ascii', 'ignore'))
     qr.png(path, scale=5)
 
     return path
@@ -117,6 +118,9 @@ def gen_qr(name, ssid, pas, t='WPA', hid="False"):
 
 def check(ssid, pas, t='WPA', hid="False"):
     for elem in [ssid, pas, t, hid]:
+        if elem.encode('ascii', 'ignore') != elem:
+            return False
+
         if elem[0] == '<' and elem[-1] == '>':
             return False
 
@@ -171,12 +175,12 @@ def create1(message):
     _, ssid, pas = parse(message.text)
     if not check(ssid, pas):
         bot.send_message(message.chat.id,
-                         'Invalid format. \n'
+                         'Invalid format. Pay attention, that only ascii char are supported. \n'
                          'Use something similar to <code>/create MyWiFiName VerySavePassword</code>',
                          parse_mode='HTML')
         return
 
-    path = gen_qr(abs(int(message.chat.id)), ssid, pas)
+    path = gen_qr(message.chat.id, ssid, pas)
 
     photo = open(path, 'rb')
     bot.send_photo(message.chat.id, photo)
