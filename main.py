@@ -116,12 +116,38 @@ def gen_qr(name, ssid, pas, t='WPA', hid="False"):
 
 
 def check(ssid, pas, t='WPA', hid="False"):
+    for elem in [ssid, pas, t, hid]:
+        if elem[0] == '<' and elem[-1] == '>':
+            return False
+
     if t not in AuthType:
         return False
+
     if hid.lower() not in ['true', 'false']:
         return False
 
     return True
+
+
+def parse(txt):
+    q = txt.split()
+    if "'" not in txt and '"' not in txt:
+        return q
+
+    new_q = []
+    st = False
+    for elem in q:
+        if not st and elem[0] in ['"', "'"]:
+            st = True
+            new_q.append('')
+        if not st:
+            new_q.append(elem)
+        if st:
+            new_q[-1] += ' ' + elem.replace('"', '').replace("'", '')
+        if st and elem[-1] in ['"', "'"]:
+            st = False
+    new_q = list(map(lambda x: x.strip(), new_q))
+    return new_q
 
 
 # --------------- bot -------------------
@@ -135,35 +161,39 @@ def send_welcome(message):
                      '• /help - to see this message\n\n'
                      '<b>NO WiFi data is stored!</b>\n'
                      'Source code is available <a href="https://github.com/otter18/wifi_qr_bot">here</a>',
-                     parse_mode='html')
+                     parse_mode='HTML')
 
 
-@bot.message_handler(regexp=r'\/create \w+ \w+$')
+@bot.message_handler(regexp=r'\/create ([\w<>]+|[\'\"][\w<> ]+[\'\"]) ([\w<>]+|[\'\"][\w<> ]+[\'\"])$')
 def create1(message):
     logger.info(f'</code>@{message.from_user.username}<code> created qr-code with less params')
 
-    _, ssid, pas = message.text.split()
+    _, ssid, pas = parse(message.text)
     if not check(ssid, pas):
         bot.send_message(message.chat.id,
                          'Invalid format. \n'
                          'Use something similar to <code>/create MyWiFiName VerySavePassword</code>',
                          parse_mode='HTML')
+        return
+
     path = gen_qr(abs(int(message.chat.id)), ssid, pas)
 
     photo = open(path, 'rb')
     bot.send_photo(message.chat.id, photo)
 
 
-@bot.message_handler(regexp=r'\/create \w+ \w+ \w+ \w+$')
+@bot.message_handler(regexp=r'\/create ([\w<>]+|[\'\"][\w<> ]+[\'\"]) ([\w<>]+|[\'\"][\w<> ]+[\'\"]) [\w<>]+ [\w<>]+$')
 def create2(message):
     logger.info(f'</code>@{message.from_user.username}<code> created qr-code with full params')
 
-    _, ssid, pas, auth, hid = message.text.split()
-    if not check(ssid, pas):
+    _, ssid, pas, auth, hid = parse(message.text)
+    if not check(ssid, pas, auth, hid):
         bot.send_message(message.chat.id,
                          'Invalid format. \n'
-                         'Use something similar to <code>/create MyWiFiName VerySavePassword WPA2 False</code>',
+                         'Use something similar to\n <code>/create MyWiFiName VerySavePassword WPA2 False</code>',
                          parse_mode='HTML')
+        return
+
     path = gen_qr(abs(int(message.chat.id)), ssid, pas, auth, hid)
 
     photo = open(path, 'rb')
@@ -174,10 +204,10 @@ def create2(message):
 def create(message):
     logger.info(f'</code>@{message.from_user.username}<code> wants create info')
     bot.send_message(message.chat.id,
-                     '<b>Use one of the following command formats:</b>\n'
-                     '• /create {SSID} {PASSWORD}\n'
-                     '• /create {SSID} {PASSWORD: None if nopass} {AUTH_TYPE: WPA, WPA2, WEP, nopass} {IS_HIDDEN: True, False}',
-                     parse_mode='html')
+                     '*Use one of the following command formats:*\n'
+                     '• /create <SSID> <PASSWORD>\n'
+                     '• /create <SSID> <PASSWORD: None if nopass> <AuthType: WPA, WPA2, WEP, nopass> <HIDDEN: True, False>',
+                     parse_mode='markdown')
 
 
 @bot.message_handler(func=lambda message: True)
