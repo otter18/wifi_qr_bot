@@ -175,7 +175,7 @@ def create1(message):
     _, ssid, pas = parse(message.text)
     if not check(ssid, pas):
         bot.send_message(message.chat.id,
-                         'Invalid format. Pay attention, that only ascii char are supported. \n'
+                         'Invalid format. Pay attention, that only ascii chars are supported.\n'
                          'Use something similar to <code>/create MyWiFiName VerySavePassword</code>',
                          parse_mode='HTML')
         return
@@ -193,7 +193,7 @@ def create2(message):
     _, ssid, pas, auth, hid = parse(message.text)
     if not check(ssid, pas, auth, hid):
         bot.send_message(message.chat.id,
-                         'Invalid format. \n'
+                         'Invalid format. Pay attention, that only ascii chars are supported.\n'
                          'Use something similar to\n <code>/create MyWiFiName VerySavePassword WPA2 False</code>',
                          parse_mode='HTML')
         return
