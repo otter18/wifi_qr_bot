@@ -5,3 +5,5 @@ pyTelegramBotAPI
 uptime
 datetime
 tg-logger
+pyqrcode
+pypng

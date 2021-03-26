@@ -10,6 +10,8 @@ import telebot
 import tg_logger
 from flask import Flask, request
 
+import pyqrcode
+
 # ------------- uptime var -------------
 boot_time = time.time()
 boot_date = datetime.datetime.now(tz=pytz.timezone("Europe/Moscow"))
@@ -26,9 +28,19 @@ bot = telebot.TeleBot(BOT_TOKEN)
 # ------------- log ---------------
 users = [int(os.environ.get("ADMIN_ID"))]
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-tg_logger.setup(logger, token=os.environ.get("LOG_BOT_TOKEN"), users=users)
+alpha_logger = logging.getLogger()
+alpha_logger.setLevel(logging.INFO)
+tg_logger.setup(alpha_logger, token=os.environ.get("LOG_BOT_TOKEN"), users=users)
+
+logger = logging.getLogger("wifi-qr-bot")
+
+# --------------- temp folder & qr-code setup ---------------
+TEMP_FOLDER = 'tmp/'
+SPECIAL_CHARACTERS = '\;,:"'
+AuthType = {'WPA': 'WPA',
+            'WPA2': 'WPA',
+            'WEP': 'WEP',
+            'nopass': 'nopass'}
 
 
 # -------------- status webpage --------------
@@ -82,22 +94,81 @@ def webhook_off():
     return "<h1>WebHook is OFF!</h1>", 200
 
 
+# --------------- utils -------------------
+def gen_qr(name, ssid, pas, t='WPA', hid="False"):
+    path = f'tmp/{abs(int(name))}.png'
+    if not os.path.exists(TEMP_FOLDER):
+        os.mkdir(TEMP_FOLDER)
+
+    for spec_char in SPECIAL_CHARACTERS:
+        ssid = ssid.replace(spec_char, f'\\{spec_char}')
+        pas = pas.replace(spec_char, f'\\{spec_char}')
+
+    txt = f'WIFI:H:{hid};S:{ssid};T:{t};P:{pas};;'
+
+    t = AuthType.get(t, 'WPA')
+    if t == 'nopass':
+        txt = f'WIFI:H:{hid};S:{ssid};T:{t};;'
+
+    qr = pyqrcode.create(txt)
+    qr.png(path, scale=5)
+
+    return path
+
+
 # --------------- bot -------------------
 @bot.message_handler(commands=['help', 'start'])
 def send_welcome(message):
-    bot.reply_to(message,
-                 '<b>Hello! This is a telegram bot template written by <a href="https://github.com/otter18">otter18</a>',
-                 parse_mode='html')
+    logger.info(f'</code>@{message.from_user.username}<code> used /start or /help command')
+    bot.send_message(message.chat.id,
+                     '<b>Hello! This bot generates WiFi qr-codes.</b>\n\n'
+                     '<b>Use commands:</b>\n'
+                     '• /create - create details\n'
+                     '• /help - to see this message\n\n'
+                     '<b>NO WiFi data is stored!</b>\n'
+                     'Source code is available <a href="https://github.com/otter18/wifi_qr_bot">here</a>',
+                     parse_mode='html')
+
+
+@bot.message_handler(regexp=r'\/create \w+ \w+$')
+def create1(message):
+    logger.info(f'</code>@{message.from_user.username}<code> created qr-code with less params')
+
+    _, ssid, pas = message.text.split()
+    path = gen_qr(abs(int(message.chat.id)), ssid, pas)
+
+    photo = open(path, 'rb')
+    bot.send_photo(message.chat.id, photo)
+
+
+@bot.message_handler(regexp=r'\/create \w+ \w+ \w+ \w+$')
+def create2(message):
+    logger.info(f'</code>@{message.from_user.username}<code> created qr-code with full params')
+
+    _, ssid, pas, auth, hid = message.text.split()
+    path = gen_qr(abs(int(message.chat.id)), ssid, pas, auth, hid)
+
+    photo = open(path, 'rb')
+    bot.send_photo(message.chat.id, photo)
+
+
+@bot.message_handler(commands=['create'])
+def create(message):
+    logger.info(f'</code>@{message.from_user.username}<code> wants create info')
+    bot.send_message(message.chat.id,
+                     '<b>Use one of the following command formats:</b>\n'
+                     '• /create {SSID} {PASSWORD}\n'
+                     '• /create {SSID} {PASSWORD: None if nopass} {AUTH_TYPE: WPA, WPA2, WEP, nopass} {IS_HIDDEN: True, False}')
 
 
 @bot.message_handler(func=lambda message: True)
-def echo(message):
-    logger.info(f'</code>@{message.from_user.username}<code> used echo:\n\n%s', message.text)
-    bot.send_message(message.chat.id, message.text)
+def invalid(message):
+    logger.info(f'</code>@{message.from_user.username}<code> used invalid command:\n\n%s', message.text)
+    bot.send_message(message.chat.id, "Invalid command. Use /help for help")
 
 
 if __name__ == '__main__':
-    if bool(os.environ.get("IS_PRODUCTION", False)):
+    if os.environ.get("IS_PRODUCTION", "False") == "True":
         app.run()
     else:
         bot.polling(none_stop=True)
