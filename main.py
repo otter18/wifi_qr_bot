@@ -35,7 +35,7 @@ tg_logger.setup(alpha_logger, token=os.environ.get("LOG_BOT_TOKEN"), users=users
 logger = logging.getLogger("wifi-qr-bot")
 
 # --------------- temp folder & qr-code setup ---------------
-TEMP_FOLDER = 'tmp/'
+TEMP_FOLDER = 'tmp'
 SPECIAL_CHARACTERS = '\;,:"'
 AuthType = {'WPA': 'WPA',
             'WPA2': 'WPA',
@@ -96,7 +96,7 @@ def webhook_off():
 
 # --------------- utils -------------------
 def gen_qr(name, ssid, pas, t='WPA', hid="False"):
-    path = f'tmp/{abs(int(name))}.png'
+    path = f'{TEMP_FOLDER}/{abs(int(name))}.png'
     if not os.path.exists(TEMP_FOLDER):
         os.mkdir(TEMP_FOLDER)
 
