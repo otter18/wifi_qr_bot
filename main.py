@@ -36,7 +36,7 @@ tg_logger.setup(app.logger, token=os.environ.get("LOG_BOT_TOKEN"), users=users)
 logger = logging.getLogger("wifi-qr-bot")
 
 # --------------- temp folder & qr-code setup ---------------
-TEMP_FOLDER = 'tmp'
+TEMP_FOLDER = 'temp'
 SPECIAL_CHARACTERS = '\;,:"'
 AuthType = {'WPA': 'WPA',
             'WPA2': 'WPA',
@@ -184,6 +184,8 @@ def create1(message):
 
     photo = open(path, 'rb')
     bot.send_photo(message.chat.id, photo)
+      
+    os.remove(path)
 
 
 @bot.message_handler(regexp=r'\/create ([\w<>]+|[\'\"][\w<> ]+[\'\"]) ([\w<>]+|[\'\"][\w<> ]+[\'\"]) [\w<>]+ [\w<>]+$')
