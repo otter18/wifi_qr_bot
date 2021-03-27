@@ -157,7 +157,7 @@ def parse(txt):
 # --------------- bot -------------------
 @bot.message_handler(commands=['help', 'start'])
 def send_welcome(message):
-    logger.info(f'</code>@{message.from_user.username}<code> used /start or /help command')
+    logger.info(f'</code>@{message.from_user.username}<code> ({message.chat.id}) used /start or /help command')
     bot.send_message(message.chat.id,
                      '<b>Hello! This bot generates WiFi qr-codes.</b>\n\n'
                      '<b>Use commands:</b>\n'
@@ -170,7 +170,7 @@ def send_welcome(message):
 
 @bot.message_handler(regexp=r'\/create ([\w<>]+|[\'\"][\w<> ]+[\'\"]) ([\w<>]+|[\'\"][\w<> ]+[\'\"])$')
 def create1(message):
-    logger.info(f'</code>@{message.from_user.username}<code> created qr-code with less params')
+    logger.info(f'</code>@{message.from_user.username}<code> ({message.chat.id}) created qr-code with less params')
 
     _, ssid, pas = parse(message.text)
     if not check(ssid, pas):
@@ -190,13 +190,13 @@ def create1(message):
 
 @bot.message_handler(regexp=r'\/create ([\w<>]+|[\'\"][\w<> ]+[\'\"]) ([\w<>]+|[\'\"][\w<> ]+[\'\"]) [\w<>]+ [\w<>]+$')
 def create2(message):
-    logger.info(f'</code>@{message.from_user.username}<code> created qr-code with full params')
+    logger.info(f'</code>@{message.from_user.username}<code> ({message.chat.id}) created qr-code with full params')
 
     _, ssid, pas, auth, hid = parse(message.text)
     if not check(ssid, pas, auth, hid):
         bot.send_message(message.chat.id,
                          'Invalid format. Pay attention, that only ascii chars are supported.\n'
-                         'Use something similar to\n <code>/create MyWiFiName VerySavePassword WPA2 False</code>',
+                         'Use something similar to\n\n<code>/create MyWiFiName VerySavePassword WPA2 False</code>',
                          parse_mode='HTML')
         return
 
@@ -208,7 +208,7 @@ def create2(message):
 
 @bot.message_handler(commands=['create'])
 def create(message):
-    logger.info(f'</code>@{message.from_user.username}<code> wants create info')
+    logger.info(f'</code>@{message.from_user.username}<code> ({message.chat.id}) wants create info')
     bot.send_message(message.chat.id,
                      '*Use one of the following command formats:*\n'
                      '• /create <SSID> <PASSWORD>\n'
@@ -218,7 +218,7 @@ def create(message):
 
 @bot.message_handler(func=lambda message: True)
 def invalid(message):
-    logger.info(f'</code>@{message.from_user.username}<code> used invalid command:\n\n%s', message.text)
+    logger.info(f'</code>@{message.from_user.username}<code> ({message.chat.id}) used invalid command:\n\n%s', message.text)
     bot.send_message(message.chat.id, "Invalid command. Use /help for help")
 
 
