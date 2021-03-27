@@ -118,7 +118,7 @@ def gen_qr(name, ssid, pas, t='WPA', hid="False"):
 
 def check(ssid, pas, t='WPA', hid="False"):
     for elem in [ssid, pas, t, hid]:
-        if elem.encode('ascii', 'ignore') != elem:
+        if elem.encode('ascii', 'ignore').decode() != elem:
             return False
 
         if elem[0] == '<' and elem[-1] == '>':
