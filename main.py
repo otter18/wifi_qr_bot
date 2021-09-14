@@ -168,7 +168,7 @@ def send_welcome(message):
                      parse_mode='HTML')
 
 
-@bot.message_handler(regexp=r'\/create ([\w<>]+|[\'\"][\w<> ]+[\'\"]) ([\w<>]+|[\'\"][\w<> ]+[\'\"])$')
+@bot.message_handler(regexp=r'\/create (.+?|[\'\"].+?[\'\"]) (.+?|[\'\"].+?[\'\"])$')
 def create1(message):
     logger.info(f'</code>@{message.from_user.username}<code> ({message.chat.id}) created qr-code with less params')
 
@@ -188,7 +188,7 @@ def create1(message):
     os.remove(path)
 
 
-@bot.message_handler(regexp=r'\/create ([\w<>]+|[\'\"][\w<> ]+[\'\"]) ([\w<>]+|[\'\"][\w<> ]+[\'\"]) [\w<>]+ [\w<>]+$')
+@bot.message_handler(regexp=r'\/create (.+?|[\'\"].+?[\'\"]) (.+?|[\'\"].+?[\'\"]) [\w<>]+ [\w<>]+$')
 def create2(message):
     logger.info(f'</code>@{message.from_user.username}<code> ({message.chat.id}) created qr-code with full params')
 
